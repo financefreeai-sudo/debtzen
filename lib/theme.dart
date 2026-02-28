@@ -7,6 +7,7 @@ class AppTheme {
   static const Color successColor = Color(0xFF2E7D32); // green
   static const Color warningColor = Color(0xFFF57F17); // amber
   static const Color bgColor = Color(0xFFFFFFFF); // white
+
   static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
     colorScheme: const ColorScheme.light(
