@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "613044687594",
+    "project_id": "debtzen-12",
+    "storage_bucket": "debtzen-12.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613044687594:android:c8b5e636f5587afdf67d93",
+        "android_client_info": {
+          "package_name": "com.example.debtzen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFUBhVrg9aVbaTTXjUs1MIg5oeCguDMs4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
