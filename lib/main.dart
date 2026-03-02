@@ -18,7 +18,7 @@ class DebtZenApp extends StatelessWidget {
       title: 'DebtZen',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: WelcomeScreen(),
+      home: const WelcomeScreen(),
     );
   }
 }
