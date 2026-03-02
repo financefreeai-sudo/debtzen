@@ -6,11 +6,12 @@ class AuthService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   User? get currentUser => _auth.currentUser;
+
   bool get isLoggedIn => _auth.currentUser != null;
 
-  // =========================
-  // SEND OTP
-  // =========================
+  /// ===============================
+  /// SEND OTP
+  /// ===============================
   Future<void> sendOTP({
     required String phoneNumber,
     required Function(String verificationId) onCodeSent,
@@ -20,37 +21,37 @@ class AuthService {
       await _auth.verifyPhoneNumber(
         phoneNumber: '+91$phoneNumber',
         timeout: const Duration(seconds: 60),
-
         verificationCompleted: (PhoneAuthCredential credential) async {
           await _auth.signInWithCredential(credential);
         },
-
         verificationFailed: (FirebaseAuthException e) {
-          print("🔥 Firebase Error Code: ${e.code}");
-          print("🔥 Firebase Error Message: ${e.message}");
-
-          onError("Error: ${e.code}");
+          String msg = "Verification failed.";
+          if (e.code == 'invalid-phone-number') {
+            msg = "Invalid phone number format.";
+          }
+          if (e.code == 'too-many-requests') {
+            msg = "Too many attempts. Try again later.";
+          }
+          onError(msg);
         },
-
         codeSent: (String verificationId, int? resendToken) {
           onCodeSent(verificationId);
         },
-
         codeAutoRetrievalTimeout: (String verificationId) {},
       );
     } catch (e) {
-      onError('Something went wrong. Please try again.');
+      onError("No internet connection.");
     }
   }
 
-  // =========================
-  // VERIFY OTP
-  // =========================
+  /// ===============================
+  /// VERIFY OTP
+  /// ===============================
   Future<Map<String, dynamic>> verifyOTP({
     required String verificationId,
     required String smsCode,
     required String name,
-    required String phoneNumber,
+    required String phone,
   }) async {
     try {
       final credential = PhoneAuthProvider.credential(
@@ -62,50 +63,43 @@ class AuthService {
       final user = result.user;
 
       if (user == null) {
-        return {'success': false, 'error': 'Authentication failed.'};
+        return {'success': false, 'error': 'Authentication failed'};
       }
 
       final doc = await _db.collection('users').doc(user.uid).get();
-      final bool isNewUser = !doc.exists;
 
-      if (isNewUser) {
+      if (!doc.exists) {
         await _db.collection('users').doc(user.uid).set({
           'name': name,
-          'phone': '+91$phoneNumber',
+          'phone': '+91$phone',
           'createdAt': FieldValue.serverTimestamp(),
           'isPro': false,
           'setupComplete': false,
-          'totalMonthlyIncome': 0.0,
-          'totalMonthlyEMI': 0.0,
-          'totalMonthlyExpenses': 0.0,
-          'totalOutstandingDebt': 0.0,
-          'totalInvestments': 0.0,
-          'totalAssets': 0.0,
-          'emergencyFundAmount': 0.0,
+          'totalMonthlyIncome': 0,
+          'totalMonthlyEMI': 0,
+          'totalMonthlyExpenses': 0,
+          'totalOutstandingDebt': 0,
+          'totalInvestments': 0,
+          'totalAssets': 0,
+          'emergencyFundAmount': 0,
           'hasHealthInsurance': false,
           'hasTermInsurance': false,
         });
+
+        return {'success': true, 'isNewUser': true};
       }
 
-      return {'success': true, 'isNewUser': isNewUser};
+      return {'success': true, 'isNewUser': doc['setupComplete'] == false};
     } on FirebaseAuthException catch (e) {
-      String msg = 'Incorrect OTP.';
-
-      if (e.code == 'session-expired') {
-        msg = 'OTP expired. Please request again.';
-      } else if (e.code == 'invalid-verification-code') {
-        msg = 'Invalid OTP.';
+      if (e.code == 'invalid-verification-code') {
+        return {'success': false, 'error': 'Incorrect OTP'};
       }
-
-      return {'success': false, 'error': msg};
+      return {'success': false, 'error': 'Authentication error'};
     } catch (e) {
-      return {'success': false, 'error': 'Something went wrong.'};
+      return {'success': false, 'error': 'No internet connection'};
     }
   }
 
-  // =========================
-  // SIGN OUT
-  // =========================
   Future<void> signOut() async {
     await _auth.signOut();
   }

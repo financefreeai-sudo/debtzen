@@ -35,7 +35,7 @@ dependencies:
   google_fonts: ^6.2.1
 
   # State Management
-  provider: ^6.1.2
+  provider: ^6.1.5+1
 
   # Connectivity & Networking
   http: ^1.2.1
