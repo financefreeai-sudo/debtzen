@@ -12,6 +12,7 @@ import 'setup/s7_investments.dart';
 import 'setup/s8_assets.dart';
 import 'setup/s9_insurance.dart';
 import 'setup/s10_retirement.dart';
+import 'setup/s11_setup_complete.dart';
 
 class QuickSetupScreen extends StatefulWidget {
   final String userName;
@@ -23,9 +24,18 @@ class QuickSetupScreen extends StatefulWidget {
 }
 
 class _QuickSetupScreenState extends State<QuickSetupScreen> {
-  final PageController _pageController = PageController();
+  late final PageController _pageController;
+  late final SetupData _setupData; // 👈 STORE PROVIDER HERE
+
   int currentPage = 0;
   final int totalPages = 10;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _setupData = SetupData(); // 👈 CREATE INSTANCE MANUALLY
+  }
 
   void nextPage() {
     if (currentPage < totalPages - 1) {
@@ -34,6 +44,20 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
         currentPage,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider.value(
+            value: _setupData, // 👈 PASS SAME INSTANCE
+            child: S11SetupComplete(
+              onDashboard: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ),
       );
     }
   }
@@ -51,8 +75,8 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SetupData(),
+    return ChangeNotifierProvider.value(
+      value: _setupData, // 👈 USE STORED INSTANCE
       child: Scaffold(
         backgroundColor: const Color(0xFFE6E9EF),
         body: Center(
@@ -64,7 +88,7 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
             ),
             child: Column(
               children: [
-                /// ================= HEADER =================
+                /// HEADER
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
                   child: Column(
@@ -87,7 +111,7 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.amber.shade700,
+                              color: Colors.amber,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(
@@ -101,59 +125,16 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 6),
-
                       const Text(
                         "10 sections to build your complete financial picture",
                         style: TextStyle(fontSize: 13, color: Colors.white70),
                       ),
-
                       const SizedBox(height: 16),
-
-                      /// STEP INDICATOR
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(totalPages, (index) {
-                          final isCompleted = index < currentPage;
-                          final isActive = index == currentPage;
-
-                          return Container(
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isCompleted
-                                  ? Colors.green
-                                  : isActive
-                                  ? Colors.amber
-                                  : Colors.white24,
-                            ),
-                            alignment: Alignment.center,
-                            child: isCompleted
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 14,
-                                    color: Colors.white,
-                                  )
-                                : Text(
-                                    "${index + 1}",
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: isActive
-                                          ? Colors.black
-                                          : Colors.white,
-                                    ),
-                                  ),
-                          );
-                        }),
-                      ),
                     ],
                   ),
                 ),
 
-                /// ================= WHITE CONTENT =================
                 Expanded(
                   child: Container(
                     decoration: const BoxDecoration(
