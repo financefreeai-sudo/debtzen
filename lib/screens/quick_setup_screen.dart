@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/setup_data.dart';
+
 import 'setup/s1_profile.dart';
 import 'setup/s2_income.dart';
+import 'setup/s3_monthly_expenses.dart';
+import 'setup/s4_annual_expenses.dart';
+import 'setup/s5_loans.dart';
+import 'setup/s6_bank_savings.dart';
+import 'setup/s7_investments.dart';
+import 'setup/s8_assets.dart';
+import 'setup/s9_insurance.dart';
+import 'setup/s10_retirement.dart';
 
 class QuickSetupScreen extends StatefulWidget {
   final String userName;
@@ -16,21 +25,28 @@ class QuickSetupScreen extends StatefulWidget {
 class _QuickSetupScreenState extends State<QuickSetupScreen> {
   final PageController _pageController = PageController();
   int currentPage = 0;
+  final int totalPages = 10;
 
   void nextPage() {
-    _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-    setState(() => currentPage++);
+    if (currentPage < totalPages - 1) {
+      setState(() => currentPage++);
+      _pageController.animateToPage(
+        currentPage,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   void prevPage() {
-    _pageController.previousPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-    setState(() => currentPage--);
+    if (currentPage > 0) {
+      setState(() => currentPage--);
+      _pageController.animateToPage(
+        currentPage,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
@@ -48,7 +64,7 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
             ),
             child: Column(
               children: [
-                /// 🔵 HEADER INSIDE NAVY CARD
+                /// ================= HEADER =================
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
                   child: Column(
@@ -95,39 +111,49 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
 
                       const SizedBox(height: 16),
 
-                      /// Step indicators (1–10)
+                      /// STEP INDICATOR
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(
-                          10,
-                          (index) => Container(
+                        children: List.generate(totalPages, (index) {
+                          final isCompleted = index < currentPage;
+                          final isActive = index == currentPage;
+
+                          return Container(
                             width: 22,
                             height: 22,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: index == currentPage
+                              color: isCompleted
+                                  ? Colors.green
+                                  : isActive
                                   ? Colors.amber
                                   : Colors.white24,
                             ),
                             alignment: Alignment.center,
-                            child: Text(
-                              "${index + 1}",
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: index == currentPage
-                                    ? Colors.black
-                                    : Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
+                            child: isCompleted
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 14,
+                                    color: Colors.white,
+                                  )
+                                : Text(
+                                    "${index + 1}",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isActive
+                                          ? Colors.black
+                                          : Colors.white,
+                                    ),
+                                  ),
+                          );
+                        }),
                       ),
                     ],
                   ),
                 ),
 
-                /// ⚪ WHITE INNER CARD
+                /// ================= WHITE CONTENT =================
                 Expanded(
                   child: Container(
                     decoration: const BoxDecoration(
@@ -142,6 +168,14 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
                       children: [
                         S1Profile(onNext: nextPage),
                         S2Income(onNext: nextPage, onBack: prevPage),
+                        S3MonthlyExpenses(onNext: nextPage, onBack: prevPage),
+                        S4AnnualExpenses(onNext: nextPage, onBack: prevPage),
+                        S5Loans(onNext: nextPage, onBack: prevPage),
+                        S6BankSavings(onNext: nextPage, onBack: prevPage),
+                        S7Investments(onNext: nextPage, onBack: prevPage),
+                        S8Assets(onNext: nextPage, onBack: prevPage),
+                        S9Insurance(onNext: nextPage, onBack: prevPage),
+                        S10Retirement(onNext: nextPage, onBack: prevPage),
                       ],
                     ),
                   ),
