@@ -15,6 +15,24 @@ class S6BankSavings extends StatefulWidget {
 }
 
 class _S6BankSavingsState extends State<S6BankSavings> {
+  final _bankCtrl = TextEditingController();
+  final _emergencyCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    final data = context.read<SetupData>();
+
+    if (data.bankBalance != null) {
+      _bankCtrl.text = data.bankBalance!.toString();
+    }
+
+    if (data.emergencyFund != null) {
+      _emergencyCtrl.text = data.emergencyFund!.toString();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SetupData>(
@@ -61,6 +79,7 @@ class _S6BankSavingsState extends State<S6BankSavings> {
                     const SizedBox(height: 8),
 
                     _currencyInput(
+                      controller: _bankCtrl,
                       hint: "Enter total savings",
                       onChanged: (v) {
                         data.bankBalance = _parse(v);
@@ -84,6 +103,7 @@ class _S6BankSavingsState extends State<S6BankSavings> {
                     const SizedBox(height: 8),
 
                     _currencyInput(
+                      controller: _emergencyCtrl,
                       hint: "Amount kept aside for emergencies",
                       onChanged: (v) {
                         data.emergencyFund = _parse(v);
@@ -169,10 +189,12 @@ class _S6BankSavingsState extends State<S6BankSavings> {
   }
 
   Widget _currencyInput({
+    required TextEditingController controller,
     required String hint,
     required Function(String) onChanged,
   }) {
     return TextField(
+      controller: controller,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       onChanged: onChanged,

@@ -217,7 +217,8 @@ class _InvestmentCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: TextFormField(
+                  initialValue: investment.currentValue?.toStringAsFixed(0),
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: "Current Value",
@@ -233,7 +234,10 @@ class _InvestmentCard extends StatelessWidget {
               const SizedBox(width: 10),
 
               Expanded(
-                child: TextField(
+                child: TextFormField(
+                  initialValue: investment.monthlyContribution?.toStringAsFixed(
+                    0,
+                  ),
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: "Monthly SIP",
@@ -250,7 +254,8 @@ class _InvestmentCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          TextField(
+          TextFormField(
+            initialValue: investment.expectedReturn?.toString(),
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               labelText: "Expected Return % (optional)",

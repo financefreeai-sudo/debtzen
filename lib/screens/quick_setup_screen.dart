@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/setup_data.dart';
 
 import 'setup/s1_profile.dart';
@@ -25,7 +28,7 @@ class QuickSetupScreen extends StatefulWidget {
 
 class _QuickSetupScreenState extends State<QuickSetupScreen> {
   late final PageController _pageController;
-  late final SetupData _setupData; // 👈 STORE PROVIDER HERE
+  late final SetupData _setupData;
 
   int currentPage = 0;
   final int totalPages = 10;
@@ -33,24 +36,91 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
   @override
   void initState() {
     super.initState();
+
     _pageController = PageController();
-    _setupData = SetupData(); // 👈 CREATE INSTANCE MANUALLY
+    _setupData = SetupData();
+
+    /// LOAD SAVED DATA FIRST
+    loadInitialData();
+
+    /// LIVE AUTO SAVE LISTENER
+    _setupData.addListener(autoSave);
   }
 
-  void nextPage() {
+  /// LOAD STEP + DATA IN ORDER
+  Future<void> loadInitialData() async {
+    await loadSetupData();
+    await loadSavedStep();
+  }
+
+  /// AUTO SAVE WHENEVER DATA CHANGES
+  void autoSave() {
+    saveSetupData();
+  }
+
+  /// LOAD LAST SAVED STEP
+  Future<void> loadSavedStep() async {
+    final prefs = await SharedPreferences.getInstance();
+    int savedStep = prefs.getInt("setup_step") ?? 0;
+
+    setState(() {
+      currentPage = savedStep;
+    });
+
+    _pageController.jumpToPage(savedStep);
+  }
+
+  /// SAVE CURRENT STEP
+  Future<void> saveStep() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt("setup_step", currentPage);
+  }
+
+  /// SAVE SETUP DATA
+  Future<void> saveSetupData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final jsonString = jsonEncode(_setupData.toJson());
+
+    await prefs.setString("setup_data", jsonString);
+  }
+
+  /// LOAD SETUP DATA
+  Future<void> loadSetupData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final jsonString = prefs.getString("setup_data");
+
+    if (jsonString != null) {
+      final jsonData = jsonDecode(jsonString);
+      _setupData.fromJson(jsonData);
+    }
+  }
+
+  void nextPage() async {
     if (currentPage < totalPages - 1) {
+      HapticFeedback.lightImpact();
+
       setState(() => currentPage++);
+
+      await saveStep();
+      await saveSetupData();
+
       _pageController.animateToPage(
         currentPage,
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
     } else {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.remove("setup_step");
+      prefs.remove("setup_data");
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider.value(
-            value: _setupData, // 👈 PASS SAME INSTANCE
+            value: _setupData,
             child: S11SetupComplete(
               onDashboard: () {
                 Navigator.pop(context);
@@ -62,21 +132,95 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
     }
   }
 
-  void prevPage() {
+  void prevPage() async {
     if (currentPage > 0) {
       setState(() => currentPage--);
+
+      await saveStep();
+      await saveSetupData();
+
       _pageController.animateToPage(
         currentPage,
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
     }
   }
 
+  Widget buildProgressSteps() {
+    return Row(
+      children: List.generate(totalPages, (index) {
+        bool completed = index < currentPage;
+        bool active = index == currentPage;
+
+        Color circleColor;
+        Widget child;
+
+        if (completed) {
+          circleColor = Colors.green;
+          child = const Icon(Icons.check, size: 14, color: Colors.white);
+        } else if (active) {
+          circleColor = const Color(0xFFFFC542);
+          child = Text(
+            "${index + 1}",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          );
+        } else {
+          circleColor = Colors.white24;
+          child = const SizedBox();
+        }
+
+        return Expanded(
+          child: Row(
+            children: [
+              AnimatedScale(
+                scale: active ? 1.15 : 1,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: circleColor,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: child,
+                ),
+              ),
+              if (index != totalPages - 1)
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOut,
+                    height: 3,
+                    color: index < currentPage ? Colors.green : Colors.white24,
+                  ),
+                ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  @override
+  void dispose() {
+    /// REMOVE LISTENER
+    _setupData.removeListener(autoSave);
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
-      value: _setupData, // 👈 USE STORED INSTANCE
+      value: _setupData,
       child: Scaffold(
         backgroundColor: const Color(0xFFE6E9EF),
         body: Center(
@@ -88,7 +232,6 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
             ),
             child: Column(
               children: [
-                /// HEADER
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
                   child: Column(
@@ -96,31 +239,13 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
+                        children: const [
+                          Text(
                             "Quick Setup",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              "5 min",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
                             ),
                           ),
                         ],
@@ -130,11 +255,11 @@ class _QuickSetupScreenState extends State<QuickSetupScreen> {
                         "10 sections to build your complete financial picture",
                         style: TextStyle(fontSize: 13, color: Colors.white70),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 18),
+                      buildProgressSteps(),
                     ],
                   ),
                 ),
-
                 Expanded(
                   child: Container(
                     decoration: const BoxDecoration(

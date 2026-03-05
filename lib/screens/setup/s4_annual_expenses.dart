@@ -27,6 +27,37 @@ class _S4AnnualExpensesState extends State<S4AnnualExpenses> {
   final _otherCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+
+    final data = context.read<SetupData>();
+
+    if (data.insurancePremium != null) {
+      _insuranceCtrl.text = data.insurancePremium!.toString();
+    }
+
+    if (data.schoolFees != null) {
+      _schoolCtrl.text = data.schoolFees!.toString();
+    }
+
+    if (data.travel != null) {
+      _travelCtrl.text = data.travel!.toString();
+    }
+
+    if (data.festival != null) {
+      _festivalCtrl.text = data.festival!.toString();
+    }
+
+    if (data.vehicleService != null) {
+      _vehicleCtrl.text = data.vehicleService!.toString();
+    }
+
+    if (data.otherAnnual != null) {
+      _otherCtrl.text = data.otherAnnual!.toString();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<SetupData>(
       builder: (context, data, _) {

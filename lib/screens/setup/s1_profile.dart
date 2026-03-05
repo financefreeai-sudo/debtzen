@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/setup_data.dart';
+import '../../providers/user_provider.dart';
 
 class S1Profile extends StatefulWidget {
   final VoidCallback onNext;
@@ -12,24 +13,49 @@ class S1Profile extends StatefulWidget {
 }
 
 class _S1ProfileState extends State<S1Profile> {
-  final TextEditingController nameCtrl = TextEditingController();
-  final TextEditingController cityCtrl = TextEditingController();
+  late final TextEditingController cityCtrl;
 
   String maritalStatus = "Single";
   int dependents = 0;
   DateTime? dob;
 
-  bool get isValid => nameCtrl.text.isNotEmpty && dob != null;
+  bool get isValid => dob != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final data = context.read<SetupData>();
+
+    cityCtrl = TextEditingController(text: data.city);
+
+    dob = data.dob;
+    dependents = data.dependents;
+    maritalStatus = data.maritalStatus;
+  }
 
   @override
   Widget build(BuildContext context) {
     final data = context.read<SetupData>();
+    final userName = context.watch<UserProvider>().user.name;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// GREETING (Fintech style onboarding touch)
+          Text(
+            "Let's complete your profile, $userName",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           /// SECTION TITLE
           const Text(
             "Basic Profile",
@@ -48,48 +74,6 @@ class _S1ProfileState extends State<S1Profile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// YOUR NAME
-                const Text(
-                  "YOUR NAME",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: nameCtrl,
-                  onChanged: (v) {
-                    data.name = v;
-                    setState(() {});
-                  },
-                  decoration: InputDecoration(
-                    hintText: "Enter your name",
-                    prefixIcon: const Icon(Icons.person_outline),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF0B2A3C),
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF0B2A3C),
-                        width: 1.6,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
                 /// DATE OF BIRTH
                 const Text(
                   "DATE OF BIRTH",

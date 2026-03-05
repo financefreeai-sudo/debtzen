@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import 'quick_setup_screen.dart';
@@ -9,13 +11,11 @@ import 'main_navigation.dart';
 class OTPScreen extends StatefulWidget {
   final String verificationId;
   final String phoneNumber;
-  final String name;
 
   const OTPScreen({
     super.key,
     required this.verificationId,
     required this.phoneNumber,
-    required this.name,
   });
 
   @override
@@ -86,13 +86,18 @@ class _OTPScreenState extends State<OTPScreen>
   Future<void> verify() async {
     if (otp.length != 6) return;
 
+    final userName = Provider.of<UserProvider>(
+      context,
+      listen: false,
+    ).user.name;
+
     FocusScope.of(context).unfocus();
     setState(() => _loading = true);
 
     final result = await auth.verifyOTP(
       verificationId: widget.verificationId,
       smsCode: otp,
-      name: widget.name,
+      name: userName,
       phone: widget.phoneNumber,
     );
 
@@ -101,11 +106,10 @@ class _OTPScreenState extends State<OTPScreen>
 
     if (result['success'] == true) {
       if (result['isNewUser'] == true) {
-        // ✅ PASS USER NAME TO QUICK SETUP
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (_) => QuickSetupScreen(userName: widget.name),
+            builder: (_) => QuickSetupScreen(userName: userName),
           ),
           (_) => false,
         );

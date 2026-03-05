@@ -70,12 +70,12 @@ class S11SetupComplete extends StatelessWidget {
                           Colors.green,
                         ),
                         _summaryRow(
-                          "Total EMI",
+                          "Total Monthly EMI",
                           "₹ ${data.totalMonthlyEmi.toStringAsFixed(0)}",
                           Colors.red,
                         ),
                         _summaryRow(
-                          "Total Expenses",
+                          "Total Monthly Expenses",
                           "₹ ${data.finalMonthlyExpense.toStringAsFixed(0)}",
                           Colors.orange,
                         ),
@@ -94,6 +94,21 @@ class S11SetupComplete extends StatelessWidget {
                           "${data.emiBurdenPercent.toStringAsFixed(1)}%",
                           Colors.orange,
                         ),
+
+                        /// 🔥 NEW METRIC
+                        _summaryRow(
+                          "Savings Rate",
+                          "${data.savingsRate.toStringAsFixed(1)}%",
+                          Colors.green,
+                        ),
+
+                        /// 🔥 NEW METRIC
+                        _summaryRow(
+                          "Expense Ratio",
+                          "${data.expenseRatio.toStringAsFixed(1)}%",
+                          Colors.orange,
+                        ),
+
                         _summaryRow(
                           "Freedom Number",
                           "₹ ${(data.freedomNumber / 10000000).toStringAsFixed(2)} Cr",

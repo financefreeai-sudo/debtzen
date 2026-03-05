@@ -29,6 +29,29 @@ class _S3MonthlyExpensesState extends State<S3MonthlyExpenses> {
   final _otherCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+
+    final data = context.read<SetupData>();
+
+    if (data.houseRent != null) _rentCtrl.text = data.houseRent!.toString();
+    if (data.foodGroceries != null)
+      _foodCtrl.text = data.foodGroceries!.toString();
+    if (data.electricityBills != null)
+      _electricCtrl.text = data.electricityBills!.toString();
+    if (data.internetMobile != null)
+      _internetCtrl.text = data.internetMobile!.toString();
+    if (data.transport != null)
+      _transportCtrl.text = data.transport!.toString();
+    if (data.medicalExpenses != null)
+      _medicalCtrl.text = data.medicalExpenses!.toString();
+    if (data.entertainment != null)
+      _entertainCtrl.text = data.entertainment!.toString();
+    if (data.otherMonthlyExpenses != null)
+      _otherCtrl.text = data.otherMonthlyExpenses!.toString();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<SetupData>(
       builder: (context, data, _) {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import 'otp_screen.dart';
@@ -40,6 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    /// SAVE NAME TO PROVIDER
+    Provider.of<UserProvider>(context, listen: false).setName(name);
+
     setState(() => _loading = true);
 
     await auth.sendOTP(
@@ -52,11 +57,8 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OTPScreen(
-              verificationId: verificationId,
-              phoneNumber: phone,
-              name: name,
-            ),
+            builder: (_) =>
+                OTPScreen(verificationId: verificationId, phoneNumber: phone),
           ),
         );
       },

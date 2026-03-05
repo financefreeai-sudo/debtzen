@@ -22,6 +22,27 @@ class _S2IncomeState extends State<S2Income> {
   final List<String> incomeTypes = ["Salary", "Business", "Freelance", "Other"];
 
   @override
+  void initState() {
+    super.initState();
+
+    final data = context.read<SetupData>();
+
+    amount1Ctrl.text = data.incomeSource1Amount == 0
+        ? ""
+        : data.incomeSource1Amount.toString();
+
+    amount2Ctrl.text = data.incomeSource2Amount == 0
+        ? ""
+        : data.incomeSource2Amount.toString();
+
+    bonusCtrl.text = data.annualBonus == 0 ? "" : data.annualBonus.toString();
+
+    if (data.incomeSource2Amount > 0 || data.incomeSource2Type.isNotEmpty) {
+      showSecondIncome = true;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final data = context.watch<SetupData>();
 

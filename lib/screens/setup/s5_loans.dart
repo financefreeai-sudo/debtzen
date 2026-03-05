@@ -171,17 +171,27 @@ class _S5LoansState extends State<S5Loans> {
           Row(
             children: [
               Expanded(
-                child: _input("Loan Amount", (v) {
-                  loan.totalAmount = _parse(v);
-                  data.notify();
-                }, isCurrency: true),
+                child: _input(
+                  "Loan Amount",
+                  (v) {
+                    loan.totalAmount = _parse(v);
+                    data.notify();
+                  },
+                  isCurrency: true,
+                  initialValue: loan.totalAmount?.toStringAsFixed(0),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _input("Monthly EMI", (v) {
-                  loan.monthlyEmi = _parse(v);
-                  data.notify();
-                }, isCurrency: true),
+                child: _input(
+                  "Monthly EMI",
+                  (v) {
+                    loan.monthlyEmi = _parse(v);
+                    data.notify();
+                  },
+                  isCurrency: true,
+                  initialValue: loan.monthlyEmi?.toStringAsFixed(0),
+                ),
               ),
             ],
           ),
@@ -192,17 +202,27 @@ class _S5LoansState extends State<S5Loans> {
           Row(
             children: [
               Expanded(
-                child: _input("Interest %", (v) {
-                  loan.interestRate = _parse(v);
-                  data.notify();
-                }, isCurrency: false),
+                child: _input(
+                  "Interest %",
+                  (v) {
+                    loan.interestRate = _parse(v);
+                    data.notify();
+                  },
+                  isCurrency: false,
+                  initialValue: loan.interestRate?.toString(),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _input("Tenure (Months)", (v) {
-                  loan.tenureMonths = int.tryParse(v);
-                  data.notify();
-                }, isCurrency: false),
+                child: _input(
+                  "Tenure (Months)",
+                  (v) {
+                    loan.tenureMonths = int.tryParse(v);
+                    data.notify();
+                  },
+                  isCurrency: false,
+                  initialValue: loan.tenureMonths?.toString(),
+                ),
               ),
             ],
           ),
@@ -230,8 +250,10 @@ class _S5LoansState extends State<S5Loans> {
     String label,
     Function(String) onChanged, {
     bool isCurrency = true,
+    String? initialValue,
   }) {
-    return TextField(
+    return TextFormField(
+      initialValue: initialValue,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       onChanged: onChanged,

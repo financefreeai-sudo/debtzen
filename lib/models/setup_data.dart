@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// ============================================================
 /// LOAN MODEL
@@ -11,13 +14,39 @@ class Loan {
   double? interestRate;
   int? tenureMonths;
 
+  /// NEW: remaining balance for accurate net worth
+  double? remainingBalance;
+
   Loan({
     this.type = "Home Loan",
     this.totalAmount,
     this.monthlyEmi,
     this.interestRate,
     this.tenureMonths,
+    this.remainingBalance,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "type": type,
+      "totalAmount": totalAmount,
+      "monthlyEmi": monthlyEmi,
+      "interestRate": interestRate,
+      "tenureMonths": tenureMonths,
+      "remainingBalance": remainingBalance,
+    };
+  }
+
+  static Loan fromJson(Map<String, dynamic> json) {
+    return Loan(
+      type: json["type"] ?? "Home Loan",
+      totalAmount: (json["totalAmount"])?.toDouble(),
+      monthlyEmi: (json["monthlyEmi"])?.toDouble(),
+      interestRate: (json["interestRate"])?.toDouble(),
+      tenureMonths: json["tenureMonths"],
+      remainingBalance: (json["remainingBalance"])?.toDouble(),
+    );
+  }
 }
 
 /// ============================================================
@@ -36,6 +65,24 @@ class Investment {
     this.monthlyContribution,
     this.expectedReturn,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "type": type,
+      "currentValue": currentValue,
+      "monthlyContribution": monthlyContribution,
+      "expectedReturn": expectedReturn,
+    };
+  }
+
+  static Investment fromJson(Map<String, dynamic> json) {
+    return Investment(
+      type: json["type"] ?? "Mutual Fund",
+      currentValue: (json["currentValue"])?.toDouble(),
+      monthlyContribution: (json["monthlyContribution"])?.toDouble(),
+      expectedReturn: (json["expectedReturn"])?.toDouble(),
+    );
+  }
 }
 
 /// ============================================================
@@ -43,7 +90,7 @@ class Investment {
 /// ============================================================
 
 class SetupData extends ChangeNotifier {
-  // ================= PROFILE =================
+  /// ================= PROFILE =================
 
   String name = '';
   DateTime? dob;
@@ -58,7 +105,7 @@ class SetupData extends ChangeNotifier {
     return DateTime.now().difference(dob!).inDays ~/ 365;
   }
 
-  // ================= INCOME =================
+  /// ================= INCOME =================
 
   String incomeSource1Type = "Salary";
   double incomeSource1Amount = 0;
@@ -73,7 +120,7 @@ class SetupData extends ChangeNotifier {
 
   bool get isIncomeValid => incomeSource1Amount > 0;
 
-  // ================= MONTHLY EXPENSES =================
+  /// ================= MONTHLY EXPENSES =================
 
   double? houseRent;
   double? electricityBills;
@@ -101,7 +148,7 @@ class SetupData extends ChangeNotifier {
       transport != null &&
       entertainment != null;
 
-  // ================= ANNUAL EXPENSES =================
+  /// ================= ANNUAL EXPENSES =================
 
   double? insurancePremium;
   double? schoolFees;
@@ -123,7 +170,7 @@ class SetupData extends ChangeNotifier {
   bool get isAnnualExpensesValid =>
       travel != null && festival != null && vehicleService != null;
 
-  // ================= LOANS =================
+  /// ================= LOANS =================
 
   List<Loan> loans = [];
 
@@ -141,27 +188,29 @@ class SetupData extends ChangeNotifier {
   double get totalMonthlyEmi =>
       loans.fold(0, (sum, loan) => sum + (loan.monthlyEmi ?? 0));
 
-  double get totalLoanAmount =>
-      loans.fold(0, (sum, loan) => sum + (loan.totalAmount ?? 0));
+  double get totalLoanAmount => loans.fold(
+    0,
+    (sum, loan) => sum + (loan.remainingBalance ?? loan.totalAmount ?? 0),
+  );
 
   void addLoan() {
     loans.add(Loan());
-    notifyListeners();
+    notify();
   }
 
   void removeLoan(Loan loan) {
     loans.remove(loan);
-    notifyListeners();
+    notify();
   }
 
-  // ================= BANK =================
+  /// ================= BANK =================
 
   double? bankBalance;
   double? emergencyFund;
 
   bool get isSavingsValid => bankBalance != null;
 
-  // ================= INVESTMENTS =================
+  /// ================= INVESTMENTS =================
 
   List<Investment> investments = [];
 
@@ -178,12 +227,12 @@ class SetupData extends ChangeNotifier {
 
   void addInvestment() {
     investments.add(Investment());
-    notifyListeners();
+    notify();
   }
 
   void removeInvestment(Investment inv) {
     investments.remove(inv);
-    notifyListeners();
+    notify();
   }
 
   double get totalInvestments =>
@@ -192,7 +241,7 @@ class SetupData extends ChangeNotifier {
   double get totalMonthlyInvestment =>
       investments.fold(0, (sum, inv) => sum + (inv.monthlyContribution ?? 0));
 
-  // ================= PHYSICAL ASSETS =================
+  /// ================= PHYSICAL ASSETS =================
 
   double goldValue = 0;
   double propertyValue = 0;
@@ -202,7 +251,7 @@ class SetupData extends ChangeNotifier {
   double get totalPhysicalAssets =>
       goldValue + propertyValue + landValue + vehicleValue;
 
-  // ================= INSURANCE =================
+  /// ================= INSURANCE =================
 
   double healthCoverage = 0;
   double healthPremiumAnnual = 0;
@@ -214,7 +263,7 @@ class SetupData extends ChangeNotifier {
   double get totalMonthlyInsurancePremium =>
       (healthPremiumAnnual + termPremiumAnnual) / 12;
 
-  // ================= RETIREMENT =================
+  /// ================= RETIREMENT =================
 
   int targetRetirementAge = 50;
 
@@ -223,33 +272,65 @@ class SetupData extends ChangeNotifier {
   double get finalMonthlyExpense =>
       totalMonthlyExpenses + monthlyEquivalentFromAnnual;
 
+  static const double inflationRate = 0.06;
+
+  double get futureMonthlyExpense =>
+      finalMonthlyExpense * pow((1 + inflationRate), yearsToRetirement);
+
   double get freedomNumber {
-    final yearlyExpense = finalMonthlyExpense * 12;
-    return yearlyExpense * 25; // 4% rule
+    final yearlyExpense = futureMonthlyExpense * 12;
+    return yearlyExpense * 25;
   }
+
+  /// expected investment return (12% yearly)
+  static const double investmentReturn = 0.12;
 
   double get requiredSip {
     final months = yearsToRetirement * 12;
-    if (months == 0) return 0;
-    return freedomNumber / months;
+    if (months <= 0) return 0;
+
+    final r = investmentReturn / 12;
+    final fv = freedomNumber;
+
+    final sip = fv * r / (pow(1 + r, months) - 1);
+
+    return sip;
   }
 
-  // ================= NET WORTH =================
+  /// ================= NET WORTH =================
 
   double get totalAssets =>
       (bankBalance ?? 0) + totalInvestments + totalPhysicalAssets;
 
   double get netWorth => totalAssets - totalLoanAmount;
 
-  // ================= FINANCIAL HEALTH =================
+  double get freedomProgressPercent {
+    if (freedomNumber == 0) return 0;
+
+    final progress = (netWorth / freedomNumber) * 100;
+
+    if (progress < 0) return 0;
+    if (progress > 100) return 100;
+
+    return progress;
+  }
+
+  /// ================= FINANCIAL HEALTH =================
 
   double get netAfterExpenses => totalMonthlyIncome - finalMonthlyExpense;
 
   double get finalNetBalance => netAfterExpenses - totalMonthlyEmi;
 
+  double get trueMonthlySavings => finalNetBalance + totalMonthlyInvestment;
+
   double get savingsRate {
     if (totalMonthlyIncome == 0) return 0;
     return (finalNetBalance / totalMonthlyIncome) * 100;
+  }
+
+  double get expenseRatio {
+    if (totalMonthlyIncome == 0) return 0;
+    return (finalMonthlyExpense / totalMonthlyIncome) * 100;
   }
 
   double get emiBurdenPercent {
@@ -299,5 +380,61 @@ class SetupData extends ChangeNotifier {
     return score;
   }
 
-  void notify() => notifyListeners();
+  /// ================= AUTO SAVE =================
+
+  void notify() {
+    saveToLocal();
+    notifyListeners();
+  }
+
+  /// ================= JSON SUPPORT =================
+
+  Map<String, dynamic> toJson() {
+    return {
+      "name": name,
+      "city": city,
+      "maritalStatus": maritalStatus,
+      "dependents": dependents,
+      "dob": dob?.millisecondsSinceEpoch,
+      "loans": loans.map((l) => l.toJson()).toList(),
+      "investments": investments.map((i) => i.toJson()).toList(),
+    };
+  }
+
+  void fromJson(Map<String, dynamic> json) {
+    name = json["name"] ?? "";
+    city = json["city"] ?? "";
+    maritalStatus = json["maritalStatus"] ?? "Single";
+    dependents = json["dependents"] ?? 0;
+
+    if (json["dob"] != null) {
+      dob = DateTime.fromMillisecondsSinceEpoch(json["dob"]);
+    }
+
+    loans = (json["loans"] as List? ?? [])
+        .map((e) => Loan.fromJson(e))
+        .toList();
+
+    investments = (json["investments"] as List? ?? [])
+        .map((e) => Investment.fromJson(e))
+        .toList();
+
+    notifyListeners();
+  }
+
+  /// ================= LOCAL STORAGE =================
+
+  Future<void> saveToLocal() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString("setup_data", jsonEncode(toJson()));
+  }
+
+  Future<void> loadFromLocal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString("setup_data");
+
+    if (raw != null) {
+      fromJson(jsonDecode(raw));
+    }
+  }
 }

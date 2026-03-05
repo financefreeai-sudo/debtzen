@@ -2,11 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/setup_data.dart';
 
-class S8Assets extends StatelessWidget {
+class S8Assets extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
 
   const S8Assets({super.key, required this.onNext, required this.onBack});
+
+  @override
+  State<S8Assets> createState() => _S8AssetsState();
+}
+
+class _S8AssetsState extends State<S8Assets> {
+  final _goldCtrl = TextEditingController();
+  final _propertyCtrl = TextEditingController();
+  final _landCtrl = TextEditingController();
+  final _vehicleCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    final data = context.read<SetupData>();
+
+    if (data.goldValue != 0) {
+      _goldCtrl.text = data.goldValue.toString();
+    }
+
+    if (data.propertyValue != 0) {
+      _propertyCtrl.text = data.propertyValue.toString();
+    }
+
+    if (data.landValue != 0) {
+      _landCtrl.text = data.landValue.toString();
+    }
+
+    if (data.vehicleValue != 0) {
+      _vehicleCtrl.text = data.vehicleValue.toString();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +73,7 @@ class S8Assets extends StatelessWidget {
 
                     /// Gold
                     TextField(
+                      controller: _goldCtrl,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: "Gold Value",
@@ -55,6 +89,7 @@ class S8Assets extends StatelessWidget {
 
                     /// Property
                     TextField(
+                      controller: _propertyCtrl,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: "Property Value (Home / Flat)",
@@ -70,6 +105,7 @@ class S8Assets extends StatelessWidget {
 
                     /// Land
                     TextField(
+                      controller: _landCtrl,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: "Land Value (Optional)",
@@ -85,6 +121,7 @@ class S8Assets extends StatelessWidget {
 
                     /// Vehicle
                     TextField(
+                      controller: _vehicleCtrl,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: "Vehicle Value (Optional)",
@@ -141,9 +178,9 @@ class S8Assets extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  /// Skip (same style as S7)
+                  /// Skip
                   TextButton(
-                    onPressed: onNext,
+                    onPressed: widget.onNext,
                     child: const Text(
                       "Skip this section",
                       style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -152,12 +189,12 @@ class S8Assets extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  /// Back + Next Row (IDENTICAL TO S7)
+                  /// Back + Next Row
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: onBack,
+                          onPressed: widget.onBack,
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(55),
                             shape: RoundedRectangleBorder(
@@ -172,7 +209,7 @@ class S8Assets extends StatelessWidget {
 
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: onNext,
+                          onPressed: widget.onNext,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0B2A3C),
                             foregroundColor: Colors.white,
