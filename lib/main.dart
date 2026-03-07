@@ -6,7 +6,9 @@ import 'firebase_options.dart';
 import 'theme.dart';
 import 'package:debtzen/screens/welcome_screen.dart';
 import 'package:debtzen/providers/user_provider.dart';
-import 'package:debtzen/main_navigation.dart'; // <-- ADDED
+import 'package:debtzen/main_navigation.dart';
+import 'providers/income_provider.dart';
+import 'models/setup_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +16,11 @@ void main() async {
 
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => UserProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => IncomeProvider()),
+        ChangeNotifierProvider(create: (_) => SetupData()),
+      ],
       child: const DebtZenApp(),
     ),
   );
@@ -29,7 +35,7 @@ class DebtZenApp extends StatelessWidget {
       title: 'DebtZen',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainNavigation(), // <-- CHANGED HERE
+      home: const MainNavigation(),
     );
   }
 }
