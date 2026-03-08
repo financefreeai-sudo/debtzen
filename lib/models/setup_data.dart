@@ -14,7 +14,10 @@ class Loan {
   double? interestRate;
   int? tenureMonths;
 
-  /// NEW: remaining balance for accurate net worth
+  /// NEW
+  int? emiPaidMonths;
+
+  /// remaining balance for accurate net worth
   double? remainingBalance;
 
   Loan({
@@ -23,6 +26,7 @@ class Loan {
     this.monthlyEmi,
     this.interestRate,
     this.tenureMonths,
+    this.emiPaidMonths,
     this.remainingBalance,
   });
 
@@ -33,6 +37,7 @@ class Loan {
       "monthlyEmi": monthlyEmi,
       "interestRate": interestRate,
       "tenureMonths": tenureMonths,
+      "emiPaidMonths": emiPaidMonths,
       "remainingBalance": remainingBalance,
     };
   }
@@ -44,6 +49,7 @@ class Loan {
       monthlyEmi: (json["monthlyEmi"])?.toDouble(),
       interestRate: (json["interestRate"])?.toDouble(),
       tenureMonths: json["tenureMonths"],
+      emiPaidMonths: json["emiPaidMonths"],
       remainingBalance: (json["remainingBalance"])?.toDouble(),
     );
   }
@@ -203,6 +209,44 @@ class SetupData extends ChangeNotifier {
     notify();
   }
 
+  /// ================= DEBT FREE DATE =================
+
+  String get debtFreeDate {
+    if (loans.isEmpty) return "-";
+
+    int maxMonths = 0;
+
+    for (var loan in loans) {
+      int tenure = loan.tenureMonths ?? 0;
+      int paid = loan.emiPaidMonths ?? 0;
+
+      int remaining = tenure - paid;
+
+      if (remaining > maxMonths) {
+        maxMonths = remaining;
+      }
+    }
+
+    final future = DateTime.now().add(Duration(days: maxMonths * 30));
+
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    return "${months[future.month - 1]} ${future.year}";
+  }
+
   /// ================= BANK =================
 
   double? bankBalance;
@@ -282,7 +326,6 @@ class SetupData extends ChangeNotifier {
     return yearlyExpense * 25;
   }
 
-  /// expected investment return (12% yearly)
   static const double investmentReturn = 0.12;
 
   double get requiredSip {
@@ -341,16 +384,6 @@ class SetupData extends ChangeNotifier {
   double get emergencyMonthsCovered {
     if (finalMonthlyExpense == 0 || emergencyFund == null) return 0;
     return emergencyFund! / finalMonthlyExpense;
-  }
-
-  String get riskLevel {
-    if (emiBurdenPercent > 50 || emergencyMonthsCovered < 1) {
-      return "High Risk";
-    } else if (emiBurdenPercent > 30 || emergencyMonthsCovered < 3) {
-      return "Moderate Risk";
-    } else {
-      return "Low Risk";
-    }
   }
 
   int get financialScore {

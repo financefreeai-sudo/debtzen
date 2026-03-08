@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/setup_data.dart';
-import '../services/emi_calculator.dart';
 import 'dart:math';
 
 class AddLoanScreen extends StatefulWidget {
-  const AddLoanScreen({super.key});
+  final Loan? loan;
+
+  const AddLoanScreen({super.key, this.loan});
 
   @override
   State<AddLoanScreen> createState() => _AddLoanScreenState();
@@ -16,8 +17,27 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
   final amountController = TextEditingController();
   final rateController = TextEditingController();
   final tenureController = TextEditingController();
+  final paidController = TextEditingController();
 
   double emi = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    /// PREFILL DATA WHEN EDITING
+    if (widget.loan != null) {
+      nameController.text = widget.loan!.type;
+      amountController.text = (widget.loan!.totalAmount ?? 0).toStringAsFixed(
+        0,
+      );
+      rateController.text = (widget.loan!.interestRate ?? 0).toStringAsFixed(0);
+      tenureController.text = (widget.loan!.tenureMonths ?? 0).toString();
+      paidController.text = (widget.loan!.emiPaidMonths ?? 0).toString();
+
+      emi = widget.loan!.monthlyEmi ?? 0;
+    }
+  }
 
   void calculate() {
     double principal = double.tryParse(amountController.text) ?? 0;
@@ -42,11 +62,19 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
       totalAmount: double.parse(amountController.text),
       interestRate: double.parse(rateController.text),
       tenureMonths: int.parse(tenureController.text),
+      emiPaidMonths: int.tryParse(paidController.text) ?? 0,
       monthlyEmi: emi,
       remainingBalance: double.parse(amountController.text),
     );
 
-    setup.loans.add(loan);
+    /// UPDATE OR ADD
+    if (widget.loan != null) {
+      final index = setup.loans.indexOf(widget.loan!);
+      setup.loans[index] = loan;
+    } else {
+      setup.loans.add(loan);
+    }
+
     setup.notify();
 
     Navigator.pop(context);
@@ -82,7 +110,19 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
             TextField(
               controller: tenureController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Tenure (Months)"),
+              decoration: const InputDecoration(
+                labelText: "Total Tenure (Months)",
+              ),
+            ),
+
+            /// FIXED FIELD LABEL
+            TextField(
+              controller: paidController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "EMIs Already Paid",
+                hintText: "Example: 10 (Months)",
+              ),
             ),
 
             const SizedBox(height: 20),
